@@ -29,7 +29,7 @@ int main(int argc, char* argv[]) {
     if (api_key.empty()) {
         std::cerr << "OPENROUTER_API_KEY is not set" << std::endl;
         return 1;
-    }
+    };
 
     json request_body = {
         {"model", "anthropic/claude-haiku-4.5"},
