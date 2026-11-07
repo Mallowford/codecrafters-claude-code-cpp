@@ -79,10 +79,30 @@ int main(int argc, char* argv[]) {
     };
 
     // You can use print statements as follows for debugging, they'll be visible when running tests.
-    std::cerr << "Logs from your program will appear here!" << std::endl;
+    // std::cerr << "Logs from your program will appear here!" << std::endl;
 
     // TODO: Uncomment the line below to pass the first stage
-    std::cout << result["choices"][0]["message"]["content"].get<std::string>();
+    json message = result["choices"][0]["message"]["content"].get<json>();
+
+    if (!message.contains("tool_calls") || message["tool_calls"].empty()) {
+        std::cout << message["content"].get<std::string>();
+        return 0;
+    };
+
+    json tool_call = message["tool_calls"][0].get<json>();
+    std::string function_name = tool_call["function"]["name"].get<std::string>();
+    json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
+
+    if (function_name == "ReadFile") {
+        std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
+        if (!file_stream.is_open()) {
+            std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
+            return 1;
+        };
+        std::cout << file_stream.rdbuf();
+        file_stream.close();
+    };
+
 
     return 0;
 };
