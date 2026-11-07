@@ -48,12 +48,10 @@ int main(int argc, char* argv[]) {
                         {"file_path", {
                             {"type", "string"},
                             {"description", "The path to the file to read"}
-                            }
                         }}
-                    } 
-                    }
-                },
-                {"required", json::array({"file_path"})}
+                    }},
+                    {"required", json::array({"file_path"})}
+                }}
             }}
         })}
     };
