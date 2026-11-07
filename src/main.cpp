@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
     // std::cerr << "Logs from your program will appear here!" << std::endl;
 
     // TODO: Uncomment the line below to pass the first stage
-    json message = result["choices"][0]["message"]["content"];
+    json message = json::parse(result["choices"][0]["message"]["content"].get<std::string>());
 
     if (!message.contains("tool_calls") || message["tool_calls"].empty()) {
         std::cout << message["content"].get<std::string>();
