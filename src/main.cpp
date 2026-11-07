@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
     };
 
     json tool_call = message["tool_calls"][0].get<json>();
-    std::string function_name = tool_call["function"]["name"].get<std::string>();
+    auto function_name = tool_call["function"]["name"].get<std::string>();
     json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
 
     if (function_name == "ReadFile") {
