@@ -5,7 +5,7 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
-#define LOCAL true
+#define LOCAL false
 
 using json = nlohmann::json;
 
@@ -76,7 +76,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "HTTP error: " << response.status_code << std::endl;
         return 1;
     };
-
     json result = json::parse(response.text);
 
     if (!result.contains("choices") || result["choices"].empty()) {
@@ -88,32 +87,24 @@ int main(int argc, char* argv[]) {
     // std::cerr << "Logs from your program will appear here!" << std::endl;
 
     // TODO: Uncomment the line below to pass the first stage
-    std::cerr << "Checking Message Quality\n";
-    json message = json::parse(result["choices"][0]["message"]["content"].get<std::string>());
-    std::cerr << "Message Quality Passed\n";
+    json message = result["choices"][0]["message"].get<json>();
 
     if (!message.contains("tool_calls") || message["tool_calls"].empty()) {
-        std::cerr << "In Here\n";
         std::cout << message["content"].get<std::string>();
         return 0;
     };
 
-    json tool_call = json::parse(message["tool_calls"][0].get<std::string>());
+    json tool_call = message["tool_calls"][0].get<json>();
     std::string function_name = tool_call["function"]["name"].get<std::string>();
     json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
 
-    std::cerr << "Tooling Extraction\n";
-
     if (function_name == "ReadFile") {
-        std::cerr << "In Here\n";
         std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
         if (!file_stream.is_open()) {
             std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
             return 1;
         };
-        std::cerr << "Failing Here?\n";
         std::cout << file_stream.rdbuf();
-        std::cerr << "Success\n";
         file_stream.close();
     };
 
