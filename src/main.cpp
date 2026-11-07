@@ -5,7 +5,7 @@
 #include <cpr/cpr.h>
 #include <nlohmann/json.hpp>
 
-#define LOCAL false
+#define LOCAL true
 
 using json = nlohmann::json;
 
@@ -63,51 +63,57 @@ int main(int argc, char* argv[]) {
         })}
     };
 
-    cpr::Response response = cpr::Post(
-        cpr::Url{base_url + "/chat/completions"},
-        cpr::Header{
-            {"Authorization", "Bearer " + api_key},
-            {"Content-Type", "application/json"}
-        },
-        cpr::Body{request_body.dump()}
-    );
 
-    if (response.status_code != 200) {
-        std::cerr << "HTTP error: " << response.status_code << std::endl;
-        return 1;
-    };
-    json result = json::parse(response.text);
+    
+    // Loop Starts Here?
+    do {
+        cpr::Response response = cpr::Post(
+            cpr::Url{base_url + "/chat/completions"},
+            cpr::Header{
+                {"Authorization", "Bearer " + api_key},
+                {"Content-Type", "application/json"}
+            },
+            cpr::Body{request_body.dump()}
+        );
 
-    if (!result.contains("choices") || result["choices"].empty()) {
-        std::cerr << "No choices in response" << std::endl;
-        return 1;
-    };
-
-    // You can use print statements as follows for debugging, they'll be visible when running tests.
-    // std::cerr << "Logs from your program will appear here!" << std::endl;
-
-    // TODO: Uncomment the line below to pass the first stage
-    json message = result["choices"][0]["message"].get<json>();
-
-    if (!message.contains("tool_calls") || message["tool_calls"].empty()) {
-        std::cout << message["content"].get<std::string>();
-        return 0;
-    };
-
-    json tool_call = message["tool_calls"][0].get<json>();
-    std::string function_name = tool_call["function"]["name"].get<std::string>();
-    json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
-
-    if (function_name == "ReadFile") {
-        std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
-        if (!file_stream.is_open()) {
-            std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
+        if (response.status_code != 200) {
+            std::cerr << "HTTP error: " << response.status_code << std::endl;
             return 1;
         };
-        std::cout << file_stream.rdbuf();
-        file_stream.close();
-    };
+        json result = json::parse(response.text);
 
+        if (!result.contains("choices") || result["choices"].empty()) {
+            std::cerr << "No choices in response" << std::endl;
+            return 1;
+        };
+
+        json message = result["choices"][0]["message"].get<json>();
+
+        request_body["messages"].push_back({
+            {{"role", result["role"]},
+            {"content", result["content"]}
+            }
+        });
+
+        if (!message.contains("tool_calls") || message["tool_calls"].empty()) {
+            std::cout << message["content"].get<std::string>();
+            break;
+        };
+
+        json tool_call = message["tool_calls"][0].get<json>();
+        std::string function_name = tool_call["function"]["name"].get<std::string>();
+        json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
+
+        if (function_name == "ReadFile") {
+            std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
+            if (!file_stream.is_open()) {
+                std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
+                return 1;
+            };
+            std::cout << file_stream.rdbuf();
+            file_stream.close();
+        };
+    } while (true);
 
     return 0;
 };
