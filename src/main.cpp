@@ -90,11 +90,11 @@ int main(int argc, char* argv[]) {
     };
 
     json tool_call = message["tool_calls"][0].get<json>();
-    auto function_name = tool_call["function"]["name"].get<std::string>();
+    std::string function_name = tool_call["function"]["name"].get<std::string>();
     json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
 
     if (function_name == "ReadFile") {
-        std::ifstream file_stream(static_cast<std::string>(arguments["file_path"].get<std::string>())); 
+        std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
         if (!file_stream.is_open()) {
             std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
             return 1;
