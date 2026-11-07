@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
     json arguments = json::parse(tool_call["function"]["arguments"].get<std::string>());
 
     if (function_name == "ReadFile") {
-        std::ifstream file_stream(arguments["file_path"].get<std::string>()); 
+        std::ifstream file_stream(static_cast<std::string>(arguments["file_path"].get<std::string>())); 
         if (!file_stream.is_open()) {
             std::cerr << "Failed to Open: " << arguments["file_path"].get<std::string>() << "\n";
             return 1;
