@@ -11,14 +11,14 @@ int main(int argc, char* argv[]) {
     if (argc < 3 || std::string(argv[1]) != "-p") {
         std::cerr << "Expected first argument to be '-p'" << std::endl;
         return 1;
-    }
+    };
 
     std::string prompt = argv[2];
 
     if (prompt.empty()) {
         std::cerr << "Prompt must not be empty" << std::endl;
         return 1;
-    }
+    };
 
     const char* api_key_env = std::getenv("OPENROUTER_API_KEY");
     const char* base_url_env = std::getenv("OPENROUTER_BASE_URL");
@@ -34,7 +34,27 @@ int main(int argc, char* argv[]) {
     json request_body = {
         {"model", "anthropic/claude-haiku-4.5"},
         {"messages", json::array({
-            {{"role", "user"}, {"content", prompt}}
+            {{"role", "user"},
+            {"content", prompt}}
+        })},
+        {"tools", json::array({
+            {"type", "function"},
+            {"function", {
+                {"name", "Read"},
+                {"description", "Read and return the contents of a file"},
+                {"parameters", {
+                    {"type", "object"},
+                    {"properties", {
+                        {"file_path", {
+                            {"type", "string"},
+                            {"description", "The path to the file to read"}
+                            }
+                        }}
+                    } 
+                    }
+                },
+                {"required", json::array({"file_path"})}
+            }}
         })}
     };
 
@@ -50,14 +70,14 @@ int main(int argc, char* argv[]) {
     if (response.status_code != 200) {
         std::cerr << "HTTP error: " << response.status_code << std::endl;
         return 1;
-    }
+    };
 
     json result = json::parse(response.text);
 
     if (!result.contains("choices") || result["choices"].empty()) {
         std::cerr << "No choices in response" << std::endl;
         return 1;
-    }
+    };
 
     // You can use print statements as follows for debugging, they'll be visible when running tests.
     std::cerr << "Logs from your program will appear here!" << std::endl;
@@ -66,4 +86,4 @@ int main(int argc, char* argv[]) {
     std::cout << result["choices"][0]["message"]["content"].get<std::string>();
 
     return 0;
-}
+};
